@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ECOtrivia</title>
+    <title>Trivia Infantil</title>
     <style>
         body {
             font-family: 'Comic Sans MS', sans-serif;
@@ -16,7 +16,7 @@
 
         header {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
             align-items: center;
             padding: 10px 20px;
             background-color: #142334; /* Azul oscuro */
@@ -24,6 +24,22 @@
 
         header img {
             max-height: 60px;
+        }
+
+        header button {
+            background-color: #FFEA00; /* Amarillo */
+            border: none;
+            border-radius: 5px;
+            color: #142334; /* Azul oscuro */
+            font-size: 1em;
+            font-weight: bold;
+            padding: 8px 15px;
+            cursor: pointer;
+            box-shadow: 0 4px rgba(0, 0, 0, 0.2);
+        }
+
+        header button:hover {
+            background-color: #fcd303;
         }
 
         h1 {
@@ -147,12 +163,13 @@
     </style>
 </head>
 <body>
-    <!-- Encabezado con logo de emprendimiento -->
+    <!-- Encabezado con botón de ayuda -->
     <header>
+        <button onclick="abrirAyuda()">Ayuda</button>
         <img src="emprendimiento-logo.png" alt="+Emprendimiento">
     </header>
 
-    <h1>ECOtrivia</h1>
+    <h1>Trivia Infantil</h1>
     <div class="counters" id="counters">
         <!-- Contadores individuales por componente -->
     </div>
@@ -328,7 +345,6 @@
             preguntasPorComponente[componente] = 0;
             preguntasRespondidas[componente] = [];
 
-            // Crear contador con el color correspondiente
             const counterElement = document.createElement('div');
             counterElement.className = 'counter';
             counterElement.id = `counter-${componente}`;
@@ -393,14 +409,14 @@
             preguntaSeleccionada.opciones.forEach((opcion, index) => {
                 const botonOpcion = document.createElement('button');
                 botonOpcion.textContent = opcion;
-                botonOpcion.onclick = () => verificarRespuesta(index, preguntaSeleccionada.respuesta, componente);
+                botonOpcion.onclick = () => verificarRespuesta(index, preguntaSeleccionada.respuesta, componente, preguntaSeleccionada.opciones);
                 opcionesContainer.appendChild(botonOpcion);
             });
 
             document.getElementById('pregunta').style.display = 'block';
         }
 
-        function verificarRespuesta(seleccion, correcta, componente) {
+        function verificarRespuesta(seleccion, correcta, componente, opciones) {
             const resultado = document.getElementById('resultado');
             const textoResultado = document.getElementById('textoResultado');
 
@@ -408,7 +424,7 @@
                 textoResultado.textContent = '¡Correcto! 🎉';
                 score++;
             } else {
-                textoResultado.textContent = '¡Ups! La respuesta correcta era: ' + (correcta + 1);
+                textoResultado.textContent = `¡Ups! La respuesta correcta era: "${opciones[correcta]}"`;
             }
 
             actualizarContadores(componente);
@@ -431,6 +447,23 @@
             const scoreElement = document.getElementById('score');
             finalDiv.style.display = 'block';
             scoreElement.textContent = `Tu puntuación final es ${score} de ${componentes.length * maxPreguntasPorComponente}.`;
+        }
+
+        function abrirAyuda() {
+            const ayudaHtml = `
+                <html>
+                    <head><title>Ayuda - Trivia Infantil</title></head>
+                    <body style="font-family: Arial, sans-serif; margin: 20px; color: #142334;">
+                        <h1>¿Cómo funciona el juego?</h1>
+                        <p>La trivia consiste en responder preguntas relacionadas con distintos temas. Gira la ruleta y responde correctamente para acumular puntos.</p>
+                        <h2>Mensaje de Reflexión</h2>
+                        <p>Recuerda que cada decisión cuenta. Aprender sobre estos temas no solo mejora tu conocimiento, sino que también te prepara para cuidar el mundo que nos rodea.</p>
+                        <button onclick="window.close()" style="padding: 10px 20px; font-size: 1em; background-color: #239B48; color: #ffffff; border: none; border-radius: 5px;">Cerrar</button>
+                    </body>
+                </html>
+            `;
+            const nuevaVentana = window.open();
+            nuevaVentana.document.write(ayudaHtml);
         }
     </script>
 </body>
