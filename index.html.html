@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Infantil</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', sans-serif;
+            text-align: center;
+            background-color: #142334; /* Azul oscuro del fondo */
+            color: #ffffff; /* Texto blanco para contraste */
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding: 10px 20px;
+            background-color: #142334; /* Azul oscuro */
+        }
+
+        header img {
+            max-height: 60px;
+        }
+
+        h1 {
+            color: #FFEA00; /* Amarillo */
+            font-size: 2.5em;
+            margin: 20px 0;
+        }
+
+        .counters {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .counter {
+            border-radius: 10px;
+            padding: 10px;
+            font-size: 1.2em;
+            color: #ffffff;
+            font-weight: bold;
+            box-shadow: 0 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #ruleta-container {
+            position: relative;
+            margin: 20px auto;
+            width: 350px;
+            height: 350px;
+        }
+
+        #ruleta {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            border: 10px solid #ffffff;
+            background: conic-gradient(
+                #f94144 0deg 60deg, /* Rojo */
+                #f8961e 60deg 120deg, /* Naranja */
+                #90be6d 120deg 180deg, /* Verde */
+                #277da1 180deg 240deg, /* Azul */
+                #577590 240deg 300deg, /* Azul Grisáceo */
+                #6a4c93 300deg 360deg /* Morado */
+            );
+            transform-origin: center;
+            animation: none;
+        }
+
+        #flecha {
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            width: 0;
+            height: 0;
+            transform: translateX(-50%);
+            border-left: 20px solid transparent;
+            border-right: 20px solid transparent;
+            border-bottom: 40px solid #ffffff; /* Flecha blanca */
+            z-index: 2;
+        }
+
+        button {
+            margin: 20px;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            background-color: #239B48; /* Verde */
+            border: none;
+            border-radius: 5px;
+            color: #ffffff;
+            cursor: pointer;
+            box-shadow: 0 4px rgba(0, 0, 0, 0.2);
+        }
+
+        button:disabled {
+            background-color: #666666;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .pregunta, .resultado {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+
+        .opciones {
+            display: flex;
+            flex-direction: column;
+            margin-top: 10px;
+        }
+
+        .opciones button {
+            margin: 5px auto;
+            width: 200px;
+        }
+
+        .final {
+            font-size: 1.5em;
+            color: #239B48; /* Verde */
+            font-weight: bold;
+        }
+
+        footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px 0;
+            background-color: #142334; /* Azul oscuro */
+        }
+
+        footer img {
+            max-height: 60px;
+        }
+
+        @keyframes girar {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(calc(360deg * var(--vueltas) + var(--angulo-final))); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Encabezado con logo de emprendimiento -->
+    <header>
+        <img src="emprendimiento-logo.png" alt="+Emprendimiento">
+    </header>
+
+    <h1>Trivia Infantil</h1>
+    <div class="counters" id="counters">
+        <!-- Contadores individuales por componente -->
+    </div>
+    <div id="ruleta-container">
+        <div id="flecha"></div>
+        <div id="ruleta"></div>
+    </div>
+    <button id="btnGirar" onclick="girarRuleta()">Girar Ruleta</button>
+    <div class="pregunta" id="pregunta">
+        <p id="textoPregunta"></p>
+        <div class="opciones" id="opciones"></div>
+    </div>
+    <div class="resultado" id="resultado">
+        <p id="textoResultado"></p>
+        <button onclick="continuar()">Continuar</button>
+    </div>
+    <div class="final" id="final" style="display:none;">
+        <p>¡Felicidades! Has completado la trivia.</p>
+        <p id="score"></p>
+    </div>
+
+    <!-- Pie de página con logo de la alcaldía -->
+    <footer>
+        <img src="alcaldia-logo.png" alt="Alcaldía de Barranquilla">
+    </footer>
+
+    <script>
+        const bancoPreguntas = {
+  "componente1": {
+    "titulo": "Cambio Climático",
+    "preguntas": [
+      { "pregunta": "¿Qué es el cambio climático?", "opciones": ["Cambios naturales en las estaciones del año", "Cambios en el clima debido a actividades humanas", "Cambios en la órbita de la Tierra"], "respuesta": 1 },
+      { "pregunta": "¿Cuál es una de las principales causas del calentamiento global?", "opciones": ["La producción de alimentos", "El uso de combustibles fósiles", "La explotación agrícola"], "respuesta": 1 },
+      { "pregunta": "¿Qué consecuencia está relacionada con el cambio climático?", "opciones": ["Aumento en las temperaturas globales", "Disminución de la contaminación del aire", "Crecimiento de los glaciares"], "respuesta": 0 },
+      { "pregunta": "¿Qué fenómeno afecta a las zonas costeras debido al cambio climático?", "opciones": ["Huracanes más pequeños", "Aumento del nivel del mar", "Más calor en los desiertos"], "respuesta": 1 },
+      { "pregunta": "¿Qué propone el Acuerdo de Kioto?", "opciones": ["Reducir las emisiones de gases de efecto invernadero", "Prohibir el uso de energías renovables", "Reducir los costos del petróleo"], "respuesta": 0 },
+      { "pregunta": "¿Qué porcentaje de reducción de emisiones de Gases de Efecto Invernadero (GEI) se compromete Colombia para 2030?", "opciones": ["30%", "51%", "10%"], "respuesta": 1 },
+      { "pregunta": "¿Cuál es el mayor emisor de Gases de Efecto Invernadero?", "opciones": ["Plantas y árboles", "Fábricas y carros", "Los océanos"], "respuesta": 1 },
+      { "pregunta": "¿Qué puedes hacer para reducir tu huella de carbono en casa?", "opciones": ["Apagar las luces cuando no las uses", "Comprar más productos en empaques grandes", "Usar más el aire acondicionado"], "respuesta": 0 },
+      { "pregunta": "¿Qué tanto se estima que subirán los niveles del mar por siglo debido al calentamiento global?", "opciones": ["30 centímetros", "75 centímetros", "1 metro"], "respuesta": 1 },
+      { "pregunta": "¿Qué proceso permite que las plantas fijen el dióxido de carbono (CO₂)?", "opciones": ["Respiración", "Fotosíntesis", "Transpiración"], "respuesta": 1 },
+      { "pregunta": "¿Qué acción ayuda a combatir el cambio climático?", "opciones": ["Plantar árboles en zonas urbanas", "Comprar más plásticos", "Dejar los grifos abiertos al lavar los platos"], "respuesta": 0 },
+      { "pregunta": "¿Qué sector es uno de los más afectados por el cambio climático?", "opciones": ["El turismo y el comercio", "La agricultura y la salud humana", "Las telecomunicaciones y el transporte marítimo"], "respuesta": 1 },
+      { "pregunta": "¿Qué gases están directamente relacionados con el calentamiento global?", "opciones": ["Oxígeno y nitrógeno", "Dióxido de carbono y metano", "Hidrógeno y helio"], "respuesta": 1 },
+      { "pregunta": "¿Qué tanto CO₂ puede absorber un árbol al año?", "opciones": ["10 kg", "22 kg", "50 kg"], "respuesta": 1 },
+      { "pregunta": "¿Qué debes hacer para ahorrar energía en tu escuela?", "opciones": ["Apagar las luces y computadoras cuando no las usas", "Dejar las luces prendidas todo el día", "Usar bombillas incandescentes"], "respuesta": 0 }
+    ]
+  },
+  "componente2": {
+    "titulo": "Residuos Sólidos",
+    "preguntas": [
+      { "pregunta": "¿Qué son los residuos sólidos?", "opciones": ["Materiales desechados sin valor económico", "Residuos líquidos generados por industrias", "Productos biodegradables que no necesitan tratamiento"], "respuesta": 0 },
+      { "pregunta": "¿Cuáles son los residuos sólidos generados en los hogares?", "opciones": ["Industriales", "Comerciales", "Domésticos"], "respuesta": 2 },
+      { "pregunta": "¿Qué significa compostaje?", "opciones": ["Reciclar envases de vidrio", "Transformar residuos orgánicos en abono natural", "Disponer residuos en vertederos"], "respuesta": 1 },
+      { "pregunta": "¿Qué representan las 3Rs en la gestión de residuos?", "opciones": ["Reciclar, reutilizar, reducir", "Reusar, redistribuir, recuperar", "Restaurar, reducir, reemplazar"], "respuesta": 0 },
+      { "pregunta": "¿Qué color de contenedor se usa para botellas de vidrio?", "opciones": ["Azul", "Verde", "Naranja"], "respuesta": 1 },
+      { "pregunta": "¿Cuánto tiempo tarda una botella de plástico en degradarse?", "opciones": ["3 a 10 días", "40 a 50 años", "500 a 1000 años"], "respuesta": 2 },
+      { "pregunta": "¿Qué tipo de residuos se consideran orgánicos?", "opciones": ["Restos de comida y cáscaras de frutas", "Vidrio y plástico", "Cartón corrugado"], "respuesta": 0 },
+      { "pregunta": "¿Qué es un biodigestor?", "opciones": ["Contenedor para reciclar vidrio", "Un dispositivo que convierte residuos orgánicos en biogás", "Equipo que separa plásticos y metales"], "respuesta": 1 },
+      { "pregunta": "¿Qué acciones fomentan el consumo responsable?", "opciones": ["Usar bolsas plásticas", "Reutilizar botellas y usar el papel por ambas caras", "Comprar productos desechables"], "respuesta": 1 },
+      { "pregunta": "¿Qué residuos sólidos no son aprovechables?", "opciones": ["Plásticos y vidrios", "Papel y cartón", "Residuos que no tienen utilidad y deben desecharse correctamente"], "respuesta": 2 },
+      { "pregunta": "¿Qué sucede con el icopor al ser desechado?", "opciones": ["Se degrada en un año", "Nunca se degrada", "Tarda 10 años en descomponerse"], "respuesta": 1 },
+      { "pregunta": "¿Qué es reutilizar?", "opciones": ["Usar productos desechados para un nuevo propósito", "Reducir el consumo de recursos", "Fabricar nuevos productos a partir de residuos"], "respuesta": 0 },
+      { "pregunta": "¿Qué residuos van en la caneca roja?", "opciones": ["Residuos peligrosos como soda cáustica", "Papel y cartón reciclable", "Botellas de plástico"], "respuesta": 0 },
+      { "pregunta": "¿Qué materiales se reciclan para obtener celulosa?", "opciones": ["Papel y cartón", "Plásticos y metales", "Textiles y residuos de alimentos"], "respuesta": 0 },
+      { "pregunta": "¿Qué residuos son biodegradables?", "opciones": ["Plástico y vidrio", "Papel y cáscaras de frutas", "Latas y cartón laminado"], "respuesta": 1 }
+    ]
+  },
+  "componente3": {
+    "titulo": "Cultura Ambiental",
+    "preguntas": [
+      { "pregunta": "¿Qué medio de transporte contamina menos?", "opciones": ["Carro", "Moto", "Bicicleta"], "respuesta": 2 },
+      { "pregunta": "¿Qué significa biodiversidad?", "opciones": ["La variedad de especies vivas en un lugar", "El conjunto de edificios y estructuras humanas", "La cantidad de ríos en un área"], "respuesta": 0 },
+      { "pregunta": "¿Qué acción ayuda a conservar el agua?", "opciones": ["Dejar el grifo abierto mientras lavas los platos", "Regar las plantas solo en las horas más frescas del día", "Lavar el carro todos los días con manguera"], "respuesta": 1 },
+      { "pregunta": "¿Cuál es el rol del ser humano en la conservación del ambiente?", "opciones": ["Explotar recursos para satisfacer sus necesidades", "Admirar la biodiversidad sin actuar", "Proteger y cuidar la diversidad del planeta"], "respuesta": 2 },
+      { "pregunta": "¿Qué son los PRAES?", "opciones": ["Programas educativos para analizar problemas ambientales locales", "Jornadas de limpieza en áreas urbanas", "Actividades de reciclaje masivo"], "respuesta": 0 },
+      { "pregunta": "¿Cómo podemos cuidar nuestro planeta?", "opciones": ["Reciclando, reutilizando y plantando árboles", "Usando bolsas plásticas en todas las compras", "Quemando residuos para generar energía"], "respuesta": 0 },
+      { "pregunta": "¿Qué es el desarrollo sostenible?", "opciones": ["Usar recursos sin preocuparse por el futuro", "Desarrollar proyectos que dañan el ambiente", "Satisfacer nuestras necesidades sin comprometer los recursos de las generaciones futuras"], "respuesta": 2 },
+      { "pregunta": "¿Qué se puede hacer con cáscaras de huevo o plátano?", "opciones": ["Tirarlas en un contenedor de basura general", "Usarlas para compostaje y abono natural", "Mezclarlas con residuos plásticos"], "respuesta": 1 },
+      { "pregunta": "¿Qué representa un punto ecológico?", "opciones": ["Un lugar donde se clasifican los residuos para su reciclaje", "Una herramienta de puntuación en proyectos de reciclaje", "Un contenedor para residuos peligrosos"], "respuesta": 0 },
+      { "pregunta": "¿Qué haces con el papel sobrante de tus actividades escolares?", "opciones": ["Lo reciclo o lo reutilizo", "Lo tiro a la basura", "Lo quemo"], "respuesta": 0 },
+      { "pregunta": "¿Qué energía se considera renovable?", "opciones": ["Carbón", "Solar", "Petróleo"], "respuesta": 1 },
+      { "pregunta": "¿Qué recursos naturales son renovables?", "opciones": ["El agua y los árboles", "El petróleo y el gas natural", "El carbón y el hierro"], "respuesta": 0 },
+      { "pregunta": "¿Qué haces para cuidar el ambiente?", "opciones": ["Reutilizo envases y reciclo papel", "Dejo las luces encendidas todo el día", "Uso productos desechables"], "respuesta": 0 },
+      { "pregunta": "¿Cuál es el gas más asociado al efecto invernadero?", "opciones": ["Metano (CH₄)", "Dióxido de carbono (CO₂)", "Oxígeno (O₂)"], "respuesta": 1 },
+      { "pregunta": "¿Qué es la ecología?", "opciones": ["El estudio de las relaciones entre los seres vivos y su entorno", "Una ciencia dedicada a la agricultura", "El cuidado de animales en peligro de extinción"], "respuesta": 0 }
+    ]
+  },
+  "componente4": {
+    "titulo": "Medición de Huella de Carbono",
+    "preguntas": [
+      { "pregunta": "¿Qué es la huella de carbono?", "opciones": ["La cantidad de agua que usamos al día", "La cantidad de gases de efecto invernadero que emitimos por nuestras actividades", "La cantidad de basura generada en una semana"], "respuesta": 1 },
+      { "pregunta": "¿Qué actividades aumentan nuestra huella de carbono?", "opciones": ["Caminar o usar bicicleta", "Usar energía renovable", "Quemar combustibles fósiles como gasolina"], "respuesta": 2 },
+      { "pregunta": "¿Cuál de estas opciones ayuda a reducir tu huella de carbono?", "opciones": ["Dejar los aparatos electrónicos encendidos todo el tiempo", "Reciclar y reutilizar materiales", "Comprar productos con empaques de plástico"], "respuesta": 1 },
+      { "pregunta": "¿Qué gas se mide principalmente al calcular la huella de carbono?", "opciones": ["Oxígeno (O₂)", "Metano (CH₄)", "Dióxido de carbono (CO₂)"], "respuesta": 2 },
+      { "pregunta": "¿Qué transporte genera menos huella de carbono?", "opciones": ["Automóvil", "Autobús", "Bicicleta"], "respuesta": 2 },
+      { "pregunta": "¿Cómo se mide la huella de carbono en una escuela?", "opciones": ["Calculando el número de estudiantes", "Midiendo el uso de energía, agua y la cantidad de residuos generados", "Contando los libros de texto usados por año"], "respuesta": 1 },
+      { "pregunta": "¿Cuál es una fuente importante de emisiones de CO₂ en los hogares?", "opciones": ["Los electrodomésticos y sistemas de calefacción", "Las plantas del jardín", "Los libros y cuadernos"], "respuesta": 0 },
+      { "pregunta": "¿Qué efecto tiene plantar árboles en la huella de carbono?", "opciones": ["Aumenta las emisiones de CO₂", "Absorbe CO₂ y reduce la huella", "No tiene ningún efecto"], "respuesta": 1 },
+      { "pregunta": "¿Qué aparato consume más energía en una escuela típica?", "opciones": ["Computadoras encendidas sin usar", "Bombillas LED", "Ventiladores manuales"], "respuesta": 0 },
+      { "pregunta": "¿Cuánto tiempo tarda un plástico en degradarse, aumentando la huella de carbono?", "opciones": ["1 año", "50 años", "Más de 500 años"], "respuesta": 2 },
+      { "pregunta": "¿Qué tipo de energía ayuda a reducir la huella de carbono?", "opciones": ["Energía solar", "Energía generada por carbón", "Energía a base de gasolina"], "respuesta": 0 },
+      { "pregunta": "¿Cómo afecta el uso excesivo de agua caliente a tu huella de carbono?", "opciones": ["La aumenta, porque requiere energía para calentar el agua", "No la afecta, porque el agua es un recurso renovable", "La reduce, porque el agua limpia el ambiente"], "respuesta": 0 },
+      { "pregunta": "¿Qué podemos hacer con los residuos orgánicos para reducir nuestra huella de carbono?", "opciones": ["Quemarlos para deshacernos de ellos rápido", "Convertirlos en compost para fertilizar plantas", "Mezclarlos con residuos plásticos"], "respuesta": 1 },
+      { "pregunta": "¿Qué impacto tiene apagar las luces cuando no se usan?", "opciones": ["Aumenta la huella de carbono", "No afecta la huella de carbono", "Reduce la huella de carbono al ahorrar energía"], "respuesta": 2 },
+      { "pregunta": "¿Por qué es importante medir la huella de carbono en una escuela?", "opciones": ["Para saber cuántos árboles plantar", "Para identificar las áreas donde se pueden reducir las emisiones", "Para calcular el número de estudiantes que pueden asistir"], "respuesta": 1 }
+    ]
+  },
+"componente5": {
+    "titulo": "Energías Renovables y Eficiencia Energética",
+    "preguntas": [
+      { "pregunta": "¿Qué son las energías renovables?", "opciones": ["Energías que no se agotan al usarse, como el sol y el viento", "Energías que generan calor", "Energías que solo usan carbón"], "respuesta": 0 },
+      { "pregunta": "¿Cuál de estas fuentes de energía es renovable?", "opciones": ["Petróleo", "Solar", "Gas natural"], "respuesta": 1 },
+      { "pregunta": "¿Qué es la energía eólica?", "opciones": ["Energía generada por el viento", "Energía generada por el agua", "Energía generada por el sol"], "respuesta": 0 },
+      { "pregunta": "¿Qué aparato usa más energía en los hogares?", "opciones": ["Televisor", "Aire acondicionado", "Bombillas LED"], "respuesta": 1 },
+      { "pregunta": "¿Qué beneficio tienen las energías renovables?", "opciones": ["Producen menos contaminación", "Son ilimitadas", "Ambas respuestas son correctas"], "respuesta": 2 },
+      { "pregunta": "¿Qué país es líder en el uso de energía solar?", "opciones": ["Estados Unidos", "China", "España"], "respuesta": 1 },
+      { "pregunta": "¿Qué se puede hacer para usar menos energía en casa?", "opciones": ["Dejar los aparatos enchufados", "Apagar luces y electrodomésticos cuando no se usen", "Usar solo agua caliente"], "respuesta": 1 },
+      { "pregunta": "¿Cómo se genera energía hidroeléctrica?", "opciones": ["Aprovechando el calor del sol", "Usando la fuerza del agua en movimiento", "Quemando carbón"], "respuesta": 1 },
+      { "pregunta": "¿Qué tipo de energía genera biogás?", "opciones": ["Energía a partir de residuos orgánicos", "Energía por el viento", "Energía a partir del carbón"], "respuesta": 0 },
+      { "pregunta": "¿Qué tipo de bombilla consume menos energía?", "opciones": ["Incandescente", "Fluorescente", "LED"], "respuesta": 2 },
+      { "pregunta": "¿Qué es la eficiencia energética?", "opciones": ["Usar menos energía para realizar la misma tarea", "Usar más energía para ahorrar tiempo", "Cambiar aparatos viejos por nuevos"], "respuesta": 0 },
+      { "pregunta": "¿Qué recurso natural se usa para generar energía geotérmica?", "opciones": ["El calor de la Tierra", "El agua de los océanos", "La luz del sol"], "respuesta": 0 },
+      { "pregunta": "¿Cómo podemos usar menos energía en la escuela?", "opciones": ["Apagando las luces cuando no las necesitemos", "Usando computadores todo el tiempo", "Dejando los abanicos encendidos en todo momento"], "respuesta": 0 },
+      { "pregunta": "¿Qué tipo de energía es mejor para el ambiente?", "opciones": ["Energía limpia, como la solar o eólica", "Energía de petróleo", "Energía generada por carbón"], "respuesta": 0 },
+      { "pregunta": "¿Qué aparato electrónico es más eficiente energéticamente?", "opciones": ["Un televisor antiguo", "Un televisor con tecnología LED", "Una nevera vieja"], "respuesta": 1 }
+    ]
+  },
+  "componente6": {
+    "titulo": "Conservación y Restauración de Ecosistemas",
+    "preguntas": [
+      { "pregunta": "¿Qué son los ecosistemas?", "opciones": ["Lugares donde viven plantas, animales y otros seres vivos que interactúan con el ambiente", "Sistemas para generar electricidad", "Áreas construidas por el ser humano"], "respuesta": 0 },
+      { "pregunta": "¿Qué es la deforestación?", "opciones": ["La pérdida de árboles y bosques", "La reforestación de áreas dañadas", "La plantación de árboles en ciudades"], "respuesta": 0 },
+      { "pregunta": "¿Qué acción ayuda a conservar los ecosistemas?", "opciones": ["Plantar árboles y cuidar las áreas verdes", "Cortar árboles para construir más edificios", "Usar fertilizantes químicos en exceso"], "respuesta": 0 },
+      { "pregunta": "¿Qué ecosistemas son clave para capturar CO₂?", "opciones": ["Desiertos", "Bosques y humedales", "Zonas urbanas"], "respuesta": 1 },
+      { "pregunta": "¿Qué es la reforestación?", "opciones": ["Plantar árboles en áreas donde se han perdido", "Construir carreteras en áreas verdes", "Quitar árboles para construir casas"], "respuesta": 0 },
+      { "pregunta": "¿Qué beneficios tienen los ecosistemas saludables?", "opciones": ["Proveen aire limpio y regulan el clima", "Reducen las lluvias y aumentan la temperatura", "Evitan el crecimiento de la biodiversidad"], "respuesta": 0 },
+      { "pregunta": "¿Qué amenaza a los ecosistemas marinos?", "opciones": ["La contaminación plástica", "El exceso de algas", "Las olas del mar"], "respuesta": 0 },
+      { "pregunta": "¿Qué podemos hacer para proteger los ecosistemas locales?", "opciones": ["Reducir residuos y evitar tirar basura en áreas verdes", "Usar químicos en jardines y campos", "Extraer recursos sin límites"], "respuesta": 0 },
+      { "pregunta": "¿Qué ecosistema protege las costas contra tormentas y erosión?", "opciones": ["Manglares", "Desiertos", "Áreas urbanas"], "respuesta": 0 },
+      { "pregunta": "¿Qué ecosistema es el hogar de la mayor cantidad de especies en el mundo?", "opciones": ["Selvas tropicales", "Desiertos", "Montañas"], "respuesta": 0 },
+      { "pregunta": "¿Qué puede suceder si destruimos los ecosistemas?", "opciones": ["Perdemos biodiversidad y calidad de vida", "Se crean más recursos naturales", "Se reduce la temperatura global"], "respuesta": 0 },
+      { "pregunta": "¿Qué es un área protegida?", "opciones": ["Espacio natural conservado para proteger la biodiversidad", "Una zona de construcción sostenible", "Un área urbana sin contaminación"], "respuesta": 0 },
+      { "pregunta": "¿Qué animal es importante para los ecosistemas forestales?", "opciones": ["Abejas", "Mono Tití", "Ambos"], "respuesta": 2 },
+      { "pregunta": "¿Cómo afecta la caza ilegal a los ecosistemas?", "opciones": ["Reduce la biodiversidad", "Mejora el equilibrio ecológico", "Ayuda a regular las poblaciones de animales"], "respuesta": 0 },
+      { "pregunta": "¿Qué recurso natural almacenan los suelos saludables?", "opciones": ["Agua y carbono", "Petróleo y gas", "Minerales y desechos"], "respuesta": 0 }
+    ]
+  }
+}
+;
+
+        const colores = [
+            "#f94144", /* Rojo */
+            "#f8961e", /* Naranja */
+            "#90be6d", /* Verde */
+            "#277da1", /* Azul */
+            "#577590", /* Azul Grisáceo */
+            "#6a4c93"  /* Morado */
+        ];
+
+        const btnGirar = document.getElementById('btnGirar');
+        const ruleta = document.getElementById('ruleta');
+        const counters = document.getElementById('counters');
+        const componentes = Object.keys(bancoPreguntas);
+
+        const maxPreguntasPorComponente = 3;
+        let preguntasPorComponente = {};
+        let preguntasRespondidas = {};
+        let componentesActivos = [...componentes];
+        let score = 0;
+
+        componentes.forEach((componente, index) => {
+            preguntasPorComponente[componente] = 0;
+            preguntasRespondidas[componente] = [];
+
+            // Crear contador con el color correspondiente
+            const counterElement = document.createElement('div');
+            counterElement.className = 'counter';
+            counterElement.id = `counter-${componente}`;
+            counterElement.textContent = `${bancoPreguntas[componente].titulo}: 0 preguntas`;
+            counterElement.style.backgroundColor = colores[index];
+            counters.appendChild(counterElement);
+        });
+
+        function actualizarContadores(componente) {
+            preguntasPorComponente[componente]++;
+            const counterElement = document.getElementById(`counter-${componente}`);
+            counterElement.textContent = `${bancoPreguntas[componente].titulo}: ${preguntasPorComponente[componente]} preguntas`;
+
+            if (preguntasPorComponente[componente] === maxPreguntasPorComponente) {
+                componentesActivos = componentesActivos.filter(c => c !== componente);
+            }
+        }
+
+        function girarRuleta() {
+            btnGirar.disabled = true;
+
+            if (componentesActivos.length === 0) {
+                finalizarTrivia();
+                return;
+            }
+
+            const sectorSeleccionado = Math.floor(Math.random() * componentesActivos.length);
+            const componenteSeleccionado = componentesActivos[sectorSeleccionado];
+            const sectorIndex = componentes.indexOf(componenteSeleccionado);
+
+            const vueltas = Math.floor(Math.random() * 5) + 3;
+            const anguloPorSector = 360 / componentes.length;
+            const anguloFinal = 360 - (sectorIndex * anguloPorSector + anguloPorSector / 2);
+
+            ruleta.style.animation = 'none';
+            ruleta.offsetHeight;
+            ruleta.style.animation = '';
+            ruleta.style.setProperty('--vueltas', vueltas);
+            ruleta.style.setProperty('--angulo-final', anguloFinal + 'deg');
+            ruleta.style.animation = 'girar 3s ease-out forwards';
+
+            setTimeout(() => {
+                mostrarPregunta(componenteSeleccionado);
+            }, 3000);
+        }
+
+        function mostrarPregunta(componente) {
+            const preguntas = bancoPreguntas[componente].preguntas;
+            let preguntaSeleccionada;
+
+            do {
+                preguntaSeleccionada = preguntas[Math.floor(Math.random() * preguntas.length)];
+            } while (preguntasRespondidas[componente].includes(preguntaSeleccionada.pregunta));
+
+            preguntasRespondidas[componente].push(preguntaSeleccionada.pregunta);
+
+            const textoPregunta = document.getElementById('textoPregunta');
+            const opcionesContainer = document.getElementById('opciones');
+
+            textoPregunta.textContent = preguntaSeleccionada.pregunta;
+            opcionesContainer.innerHTML = '';
+            preguntaSeleccionada.opciones.forEach((opcion, index) => {
+                const botonOpcion = document.createElement('button');
+                botonOpcion.textContent = opcion;
+                botonOpcion.onclick = () => verificarRespuesta(index, preguntaSeleccionada.respuesta, componente);
+                opcionesContainer.appendChild(botonOpcion);
+            });
+
+            document.getElementById('pregunta').style.display = 'block';
+        }
+
+        function verificarRespuesta(seleccion, correcta, componente) {
+            const resultado = document.getElementById('resultado');
+            const textoResultado = document.getElementById('textoResultado');
+
+            if (seleccion === correcta) {
+                textoResultado.textContent = '¡Correcto! 🎉';
+                score++;
+            } else {
+                textoResultado.textContent = '¡Ups! La respuesta correcta era: ' + (correcta + 1);
+            }
+
+            actualizarContadores(componente);
+            document.getElementById('pregunta').style.display = 'none';
+            resultado.style.display = 'block';
+        }
+
+        function continuar() {
+            document.getElementById('resultado').style.display = 'none';
+
+            if (componentesActivos.length === 0) {
+                finalizarTrivia();
+            } else {
+                btnGirar.disabled = false;
+            }
+        }
+
+        function finalizarTrivia() {
+            const finalDiv = document.getElementById('final');
+            const scoreElement = document.getElementById('score');
+            finalDiv.style.display = 'block';
+            scoreElement.textContent = `Tu puntuación final es ${score} de ${componentes.length * maxPreguntasPorComponente}.`;
+        }
+    </script>
+</body>
+</html>
